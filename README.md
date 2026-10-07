@@ -2,7 +2,7 @@
 
 Spring Cloud 微服务架构的校园二手交易平台后端，包含一个基于 **ReAct 模式的 AI Agent** 模块。
 
-> 前端仓库：[reflashvue](https://github.com/你的用户名/reflashvue)（独立仓库）
+> 前端仓库：[Vue](https://github.com/songzhihangdev/Campus-Secondhand-Market-Vue)（独立仓库）
 
 ---
 
@@ -24,8 +24,6 @@ Spring Cloud 微服务架构的校园二手交易平台后端，包含一个基�
 
 ## 界面展示
 
-> 图片存放在 `docs/images/`，已压缩（总体积 3.6 MB）。
-
 ### AI Agent（ReAct 智能体）
 
 | | |
@@ -42,12 +40,12 @@ Spring Cloud 微服务架构的校园二手交易平台后端，包含一个基�
 
 | | |
 |---|---|
-| **商品搜索**<br>ES 全文检索，支持品牌/分类/价格筛选 | **商品详情**<br>已售/下架状态实时标注 |
+| **商品搜索**<br>ES 全文检索，支持品牌/分类/价格筛选 | **商品详情**<br>商品详情页展示 |
 | ![](docs/images/search.png) | ![](docs/images/item-detail.png) |
 
 | | |
 |---|---|
-| **发布闲置**<br>支持图片上传（按天分目录存储） | **发布成功**<br>写入 MySQL 并同步 ES 索引 |
+| **发布闲置**<br>支持图片上传 | **发布成功**<br>写入 MySQL 并同步 ES 索引 |
 | ![](docs/images/publish-form.png) | ![](docs/images/publish-submitted.png) |
 
 | | |
