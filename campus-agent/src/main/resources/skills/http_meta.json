@@ -1,0 +1,262 @@
+[
+  {
+    "skillName": "get_address_by_id",
+    "httpMethod": "GET",
+    "path": "/addresses/{addressId}",
+    "pathParams": {
+      "addressId": "地址id"
+    },
+    "fixedHeaders": {},
+    "timeout": 10000,
+    "requestBodyType": "none",
+    "needToken": true,
+    "desc": "根据id查询收货地址"
+  },
+  {
+    "skillName": "list_my_addresses",
+    "httpMethod": "GET",
+    "path": "/addresses",
+    "pathParams": {},
+    "fixedHeaders": {},
+    "timeout": 10000,
+    "requestBodyType": "none",
+    "needToken": true,
+    "desc": "查询当前用户地址列表"
+  },
+  {
+    "skillName": "get_order_by_id",
+    "httpMethod": "GET",
+    "path": "/orders/{id}",
+    "pathParams": {
+      "id": "订单id"
+    },
+    "fixedHeaders": {},
+    "timeout": 10000,
+    "requestBodyType": "none",
+    "needToken": true,
+    "desc": "根据id查询订单"
+  },
+  {
+    "skillName": "create_order",
+    "httpMethod": "POST",
+    "path": "/orders",
+    "pathParams": {},
+    "fixedHeaders": {
+      "Content-Type": "application/json"
+    },
+    "timeout": 10000,
+    "requestBodyType": "json",
+    "needToken": true,
+    "desc": "创建订单，请求体OrderFormDTO，返回订单id"
+  },
+  {
+    "skillName": "search_items",
+    "httpMethod": "GET",
+    "path": "/search/list",
+    "pathParams": {},
+    "fixedHeaders": {},
+    "timeout": 10000,
+    "requestBodyType": "none",
+    "needToken": false,
+    "desc": "搜索商品，查询条件ItemPageQuery走query"
+  },
+  {
+    "skillName": "page_items",
+    "httpMethod": "GET",
+    "path": "/items/page",
+    "pathParams": {},
+    "fixedHeaders": {},
+    "timeout": 10000,
+    "requestBodyType": "none",
+    "needToken": false,
+    "desc": "分页查询商品，分页参数PageQuery走query"
+  },
+  {
+    "skillName": "query_items_by_ids",
+    "httpMethod": "GET",
+    "path": "/items",
+    "pathParams": {},
+    "fixedHeaders": {},
+    "timeout": 10000,
+    "requestBodyType": "none",
+    "needToken": true,
+    "desc": "根据id集合批量查询商品，ids走query"
+  },
+  {
+    "skillName": "get_item_by_id",
+    "httpMethod": "GET",
+    "path": "/items/{id}",
+    "pathParams": {
+      "id": "商品id"
+    },
+    "fixedHeaders": {},
+    "timeout": 10000,
+    "requestBodyType": "none",
+    "needToken": true,
+    "desc": "根据id查询单个商品"
+  },
+  {
+    "skillName": "add_item",
+    "httpMethod": "POST",
+    "path": "/items",
+    "pathParams": {},
+    "fixedHeaders": {
+      "Content-Type": "application/json"
+    },
+    "timeout": 10000,
+    "requestBodyType": "json",
+    "needToken": true,
+    "desc": "新增商品，请求体ItemDTO"
+  },
+  {
+    "skillName": "update_item_status",
+    "httpMethod": "PUT",
+    "path": "/items/status/{id}/{status}",
+    "pathParams": {
+      "id": "商品id",
+      "status": "商品状态"
+    },
+    "fixedHeaders": {},
+    "timeout": 10000,
+    "requestBodyType": "none",
+    "needToken": true,
+    "desc": "更新商品状态（上下架/删除）"
+  },
+  {
+    "skillName": "update_item",
+    "httpMethod": "PUT",
+    "path": "/items",
+    "pathParams": {},
+    "fixedHeaders": {
+      "Content-Type": "application/json"
+    },
+    "timeout": 10000,
+    "requestBodyType": "json",
+    "needToken": true,
+    "desc": "更新商品信息，请求体ItemDTO（status字段被忽略）"
+  },
+  {
+    "skillName": "delete_item",
+    "httpMethod": "DELETE",
+    "path": "/items/{id}",
+    "pathParams": {
+      "id": "商品id"
+    },
+    "fixedHeaders": {},
+    "timeout": 10000,
+    "requestBodyType": "none",
+    "needToken": true,
+    "desc": "根据id删除商品"
+  },
+  {
+    "skillName": "add_cart_item",
+    "httpMethod": "POST",
+    "path": "/carts",
+    "pathParams": {},
+    "fixedHeaders": {
+      "Content-Type": "application/json"
+    },
+    "timeout": 10000,
+    "requestBodyType": "json",
+    "needToken": true,
+    "desc": "添加商品到购物车，请求体CartFormDTO"
+  },
+  {
+    "skillName": "update_cart",
+    "httpMethod": "PUT",
+    "path": "/carts",
+    "pathParams": {},
+    "fixedHeaders": {
+      "Content-Type": "application/json"
+    },
+    "timeout": 10000,
+    "requestBodyType": "json",
+    "needToken": true,
+    "desc": "更新购物车条目，请求体Cart"
+  },
+  {
+    "skillName": "delete_cart_item",
+    "httpMethod": "DELETE",
+    "path": "/carts/{id}",
+    "pathParams": {
+      "id": "购物车条目id"
+    },
+    "fixedHeaders": {},
+    "timeout": 10000,
+    "requestBodyType": "none",
+    "needToken": true,
+    "desc": "删除购物车中单个商品"
+  },
+  {
+    "skillName": "list_my_carts",
+    "httpMethod": "GET",
+    "path": "/carts",
+    "pathParams": {},
+    "fixedHeaders": {},
+    "timeout": 10000,
+    "requestBodyType": "none",
+    "needToken": true,
+    "desc": "查询当前用户购物车列表"
+  },
+  {
+    "skillName": "delete_cart_items_batch",
+    "httpMethod": "DELETE",
+    "path": "/carts",
+    "pathParams": {},
+    "fixedHeaders": {},
+    "timeout": 10000,
+    "requestBodyType": "none",
+    "needToken": true,
+    "desc": "批量删除购物车商品，ids走query"
+  },
+  {
+    "skillName": "list_pay_orders",
+    "httpMethod": "GET",
+    "path": "/pay-orders",
+    "pathParams": {},
+    "fixedHeaders": {},
+    "timeout": 10000,
+    "requestBodyType": "none",
+    "needToken": true,
+    "desc": "查询支付单列表"
+  },
+  {
+    "skillName": "apply_pay_order",
+    "httpMethod": "POST",
+    "path": "/pay-orders",
+    "pathParams": {},
+    "fixedHeaders": {
+      "Content-Type": "application/json"
+    },
+    "timeout": 10000,
+    "requestBodyType": "json",
+    "needToken": true,
+    "desc": "生成支付单，请求体PayApplyDTO，返回支付单id字符串"
+  },
+  {
+    "skillName": "pay_order_by_balance",
+    "httpMethod": "POST",
+    "path": "/pay-orders/{id}",
+    "pathParams": {
+      "id": "支付单id"
+    },
+    "fixedHeaders": {
+      "Content-Type": "application/json"
+    },
+    "timeout": 10000,
+    "requestBodyType": "json",
+    "needToken": true,
+    "desc": "基于用户余额支付，请求体PayOrderFormDTO"
+  },
+  {
+    "skillName": "confirm_receipt",
+    "httpMethod": "PUT",
+    "path": "/orders/{id}/confirm",
+    "pathParams": {
+      "id": "订单id"
+    },
+    "fixedHeaders": {},
+    "timeout": 10000,
+    "requestBodyType": "none"
+  }
+]

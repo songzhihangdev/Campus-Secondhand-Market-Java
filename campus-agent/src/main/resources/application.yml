@@ -1,0 +1,73 @@
+server:
+  # 本模块自身端口（仅承载执行器能力，按需调整；与商城服务端口区分）
+  port: 8090
+
+spring:
+  application:
+    name: campus-agent
+  cloud:
+    nacos:
+      # 必须配置：否则 Agent 不注册到 Nacos，
+      # 网关按 lb://campus-agent 转发时返回 503（端口监听≠服务可用）
+      server-addr: 192.168.1.4:8848
+      discovery:
+        server-addr: 192.168.1.4:8848
+
+# ===== ReAct Agent 调度器配置 =====
+agent:
+  # ReAct 最大循环轮次（推理->行动->观察 算一轮），超过则强制终止
+  max-round: 10
+
+  # ===== JWT 鉴权配置（与商城侧共用同一个 jks 密钥库）=====
+  jwt:
+    location: classpath:hmall.jks
+    alias: hmall
+    password: hmall123
+    tokenTTL: 30m
+
+  # ===== 会话与对话记录配置 =====
+  session:
+    # 对话记录落盘根目录，实际路径为 {root-dir}/{userId}/{sessionId}.jsonl
+    root-dir: D:/JavaProject/261005/UserContext
+    # 内存会话热缓存时长（历史真源在文件，过期不影响历史查询）
+    memory-ttl: 2h
+
+  # ===== 上下文压缩配置 =====
+  # 只压缩"送给大模型的视图"，落盘 jsonl 与用户可见历史始终是完整数据
+  compress:
+    enabled: true
+    # 分页类工具结果（商品列表）最多保留多少条
+    max-items-in-list: 5
+    # 非 JSON 形态工具结果的字符上限
+    max-plain-text-length: 1000
+    # 单条 observation 裁剪后的字符兜底上限
+    max-observation-length: 1500
+    # 消息总数超过该值时，按整轮丢弃最早的消息
+    max-messages: 60
+    # 保留最近多少条不参与丢弃
+    keep-recent-messages: 20
+
+mall:
+  # 商城服务基础地址（不含接口路径）。本地联调一般指向网关或 campus-trade
+  base-url: http://localhost:8080
+  # 全局“建立连接”超时（毫秒）；每个技能的“读超时”取 http_meta.json 的 timeout
+  connect-timeout: 300000
+  skills:
+    # 两份技能配置在 classpath 中的位置（一般无需修改）
+    llm-def: skills/llm_skill_def.json
+    http-meta: skills/http_meta.json
+
+# ===== LLM 客户端配置（OpenAI 兼容协议，支持 DeepSeek / 通义千问）=====
+llm:
+  # 基础地址（不含 /chat/completions）
+  #   DeepSeek：https://api.deepseek.com
+  #   通义千问兼容模式：https://dashscope.aliyuncs.com/compatible-mode/v1
+  base-url: https://api.deepseek.com
+  # API Key。优先从环境变量读取，未设置时回落到下方默认值。
+  # ⚠️ 生产环境务必用环境变量注入，不要把 Key 写进版本库。
+  #    启动前设置：export LLM_API_KEY=sk-xxxxxxxx
+  api-key: 11111111
+  # 模型名：DeepSeek 用 deepseek-chat；通义千问用 qwen-plus / qwen-turbo
+  model: deepseek-chat
+  # 连接与读取超时（毫秒）
+  timeout: 30000

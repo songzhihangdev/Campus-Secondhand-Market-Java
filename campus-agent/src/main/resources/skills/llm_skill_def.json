@@ -1,0 +1,582 @@
+[
+  {
+    "name": "get_address_by_id",
+    "summary": "按id查收货地址",
+    "description": "根据地址id查询一条收货地址详情，用于下单时确认指定收货地址、或查看/编辑某条地址。前提：用户已登录，且该地址属于当前登录用户。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "addressId": {
+          "type": "int",
+          "description": "收货地址id，必填，为系统中已存在的地址编号。"
+        }
+      },
+      "required": [
+        "addressId"
+      ]
+    },
+    "return_desc": "返回 AddressDTO：id地址id，province省、city市、town县/区，street详细地址，mobile收件手机，contact联系人，isDefault是否默认（1默认 0否），notes备注。",
+    "error_desc": "地址不属于当前登录用户时返回“地址不属于当前登录用户”，应停止查看并提示用户只能访问自己的地址；地址id不存在可能导致查询异常，应告知用户未找到该地址并建议重新选择。",
+    "warning": "【低风险】只读查询接口。"
+  },
+  {
+    "name": "list_my_addresses",
+    "summary": "查询我的地址列表",
+    "description": "查询当前登录用户的全部收货地址，用于下单选择地址、管理收货地址。前提：用户已登录。无地址时返回空列表。",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    },
+    "return_desc": "返回 AddressDTO 数组，每条包含省市区、详细地址、收件手机、联系人、是否默认（1默认 0否）、备注；无地址时返回空数组。",
+    "error_desc": "返回空列表时应告知用户尚未添加收货地址。",
+    "warning": "【低风险】只读查询接口，地址含个人联系方式，注意隐私保护。"
+  },
+  {
+    "name": "get_order_by_id",
+    "summary": "按id查询订单",
+    "description": "根据订单id查询订单详情与状态，用于用户询问“我的订单到哪了、订单状态、订单金额、寄到哪个地址”。返回内容包含收货信息快照（收件人、电话、地址），用户问“我的订单寄到哪了”时直接据此回答。前提：用户已登录且订单属于本人。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "int",
+          "description": "订单id，必填，为下单成功后系统返回的订单编号。"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "return_desc": "返回 OrderVO：id订单id，totalFee总金额（分），paymentType支付类型（1支付宝 2微信 3扣减余额），userId下单用户id，status订单状态（1未付款 2已付款未发货 3已发货未确认 4确认收货交易成功 5交易取消关闭 6交易结束已评价），以及createTime创建、payTime支付、consignTime发货、endTime完成、closeTime关闭、commentTime评价等时间。",
+    "error_desc": "订单id不存在时返回数据为空，应告知用户未找到该订单并核对订单号；原始文档未提供订单归属校验的错误说明。",
+    "warning": "【低风险】只读查询接口。"
+  },
+  {
+    "name": "create_order",
+    "summary": "提交创建订单",
+    "description": "基于用户选购的商品、数量和收货地址创建订单：系统按商品实时价格计算总价、保存订单与明细、清理购物车对应商品并扣减库存。当用户明确说“下单、结算、立即购买、提交订单”时调用。前提：用户已登录、商品存在且在售、库存充足、已确定收货地址。创建后订单为未付款状态，需再走支付流程。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "addressId": {
+          "type": "int",
+          "description": "收货地址id，业务上下单必需，需来自用户已有的收货地址。原始OpenAPI未标记required，但下单流程依赖该地址。"
+        },
+        "paymentType": {
+          "type": "int",
+          "description": "支付类型，可选，枚举：1支付宝、2微信、3扣减余额。",
+          "enum": [
+            1,
+            2,
+            3
+          ]
+        },
+        "details": {
+          "type": "array",
+          "description": "下单商品列表，业务上必填，每项包含itemId商品id与num购买数量（正整数）。"
+        }
+      },
+      "required": [
+        "details"
+      ]
+    },
+    "return_desc": "返回新建订单id（int64整数）。拿到订单id即创建成功，订单初始状态为未付款，应引导用户继续支付。",
+    "error_desc": "商品不存在（含已下架/删除导致查不到）返回“商品不存在”，应告知用户并建议重新选购；库存不足返回“库存不足”，应提示用户减少数量或更换商品；缺少收货地址时应先让用户选择或新增地址。",
+    "warning": "【高风险】下单交易类操作，Agent不能直接执行，必须向用户展示物品、数量、地址和金额，取得人工确认后才可调用。"
+  },
+  {
+    "name": "search_items",
+    "summary": "关键字搜索商品",
+    "description": "按关键字、分类、品牌、价格区间分页搜索在售商品，用于用户“找商品、搜手机、按品牌/价格筛选”等导购场景。仅返回状态正常（在售）的商品。所有条件均可选，全部省略时按更新时间分页浏览。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "搜索关键字，可选，按商品名称模糊匹配。"
+        },
+        "category": {
+          "type": "string",
+          "description": "商品分类（类目名称），可选，如“手机”。"
+        },
+        "brand": {
+          "type": "string",
+          "description": "商品品牌，可选，如“华为”。"
+        },
+        "minPrice": {
+          "type": "int",
+          "description": "价格最小值（分），可选，与maxPrice共同限定价格区间。"
+        },
+        "maxPrice": {
+          "type": "int",
+          "description": "价格最大值（分），可选。"
+        },
+        "pageNo": {
+          "type": "int",
+          "description": "页码，可选，从1开始。",
+          "default": 1
+        },
+        "pageSize": {
+          "type": "int",
+          "description": "每页商品数量，可选。",
+          "default": 20
+        },
+        "isAsc": {
+          "type": "boolean",
+          "description": "是否升序排列，可选。",
+          "default": true
+        },
+        "sortBy": {
+          "type": "string",
+          "description": "排序字段，可选；原始文档未提供可排序字段枚举。"
+        }
+      },
+      "required": []
+    },
+    "return_desc": "返回分页对象 PageDTO<ItemDTO>：total总记录数、pages总页数、list当前页商品列表。商品字段含id、name名称、price价格（分）、stock库存、image图片、category类目、brand品牌、spec规格、sold销量、commentCount评论数、isAD是否广告、status状态。",
+    "error_desc": "参数格式错误（如价格非数字）返回请求参数错误，应修正参数重试；list为空表示无符合条件商品，应告知用户并建议放宽筛选条件。",
+    "warning": "【低风险】只读搜索接口。"
+  },
+  {
+    "name": "page_items",
+    "summary": "分页浏览商品",
+    "description": "按分页参数浏览全部商品（含各状态商品，默认按更新时间倒序），用于商品列表页、后台商品浏览。若用户带有关键字/品牌/价格筛选意图，应改用 search_items。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "pageNo": {
+          "type": "int",
+          "description": "页码，可选，从1开始。",
+          "default": 1
+        },
+        "pageSize": {
+          "type": "int",
+          "description": "每页数量，可选。",
+          "default": 20
+        },
+        "isAsc": {
+          "type": "boolean",
+          "description": "是否升序，可选。",
+          "default": true
+        },
+        "sortBy": {
+          "type": "string",
+          "description": "排序字段，可选；原始文档未提供字段枚举，默认按update_time排序。"
+        }
+      },
+      "required": []
+    },
+    "return_desc": "返回分页对象：total总记录数、pages总页数、list当前页商品列表（ItemDTO字段同商品搜索结果）。",
+    "error_desc": "分页参数格式错误时返回参数绑定错误，应修正pageNo/pageSize后重试；查询到空页应告知用户没有更多商品。",
+    "warning": "【低风险】只读查询接口。"
+  },
+  {
+    "name": "query_items_by_ids",
+    "summary": "按id批量查商品",
+    "description": "根据一组商品id批量查询商品信息，用于购物车、订单结算、收藏等需要一次性获取多个商品最新信息的场景。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "ids": {
+          "type": "array",
+          "description": "商品id集合，必填，以逗号分隔的多个商品id，至少一个。"
+        }
+      },
+      "required": [
+        "ids"
+      ]
+    },
+    "return_desc": "返回 ItemDTO 数组，每项含商品id、名称、价格（分）、库存、图片、类目、品牌、规格、销量、评论数、是否广告、状态（1正常 2下架 3删除）。查不到的id不会出现在结果中。",
+    "error_desc": "未传ids返回参数缺失错误，应补问商品id；结果数量少于请求数量时，说明部分商品不存在或已删除，应如实告知用户。",
+    "warning": "【低风险】只读查询接口。"
+  },
+  {
+    "name": "get_item_by_id",
+    "summary": "按id查商品详情",
+    "description": "根据商品id查询单个商品详情，用于用户查看商品详情页、确认价格库存规格。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "int",
+          "description": "商品id，必填。"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "return_desc": "返回 ItemDTO：id、name名称、price价格（分）、stock库存、image图片、category类目、brand品牌、spec规格、sold销量、commentCount评论数、isAD是否广告、status状态（1正常 2下架 3删除）。",
+    "error_desc": "商品id不存在时返回数据为空，应告知用户商品不存在或已下架；（原始文档未明确该接口的登录要求。）",
+    "warning": "【低风险】只读查询接口。"
+  },
+  {
+    "name": "add_item",
+    "summary": "新增商品",
+    "description": "创建一个新商品（SKU），用于商家/管理员上架新商品。需要提供商品名称、价格、库存等信息。普通买家任务不应调用此接口。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "SKU名称，业务上必填，原始OpenAPI未在DTO中标注required。"
+        },
+        "price": {
+          "type": "int",
+          "description": "价格，单位分，应为非负整数。"
+        },
+        "stock": {
+          "type": "int",
+          "description": "库存数量，非负整数。"
+        },
+        "image": {
+          "type": "string",
+          "description": "商品图片地址，可选。"
+        },
+        "category": {
+          "type": "string",
+          "description": "类目名称，可选。"
+        },
+        "brand": {
+          "type": "string",
+          "description": "品牌名称，可选。"
+        },
+        "spec": {
+          "type": "string",
+          "description": "规格，可选，如“8+128”。"
+        },
+        "status": {
+          "type": "int",
+          "description": "商品状态，可选，枚举：1正常、2下架、3删除。",
+          "enum": [
+            1,
+            2,
+            3
+          ]
+        }
+      },
+      "required": []
+    },
+    "return_desc": "无业务数据返回，HTTP 200表示商品新增成功，系统生成商品id。",
+    "error_desc": "请求体格式错误或字段类型不符返回参数校验错误，应修正后重试；原始文档未提供该接口的业务错误码。",
+    "warning": "【高风险】新增类写接口，Agent不能直接执行，需人工确认商品信息后再调用。"
+  },
+  {
+    "name": "update_item_status",
+    "summary": "修改商品上下架状态",
+    "description": "修改指定商品的状态，用于商品上架、下架、删除等运营操作。普通买家任务不应调用。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "int",
+          "description": "商品id，必填。"
+        },
+        "status": {
+          "type": "int",
+          "description": "目标商品状态，必填，枚举：1正常（上架）、2下架、3删除。",
+          "enum": [
+            1,
+            2,
+            3
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "status"
+      ]
+    },
+    "return_desc": "无业务数据返回，HTTP 200表示状态更新成功。",
+    "error_desc": "商品id不存在时更新无效，应核对id；传入1/2/3以外的状态可能导致更新异常或数据异常，应严格使用枚举值。",
+    "warning": "【高风险】修改类写接口，下架/删除会直接影响商品可售性，Agent不能直接执行，需人工确认。"
+  },
+  {
+    "name": "update_item",
+    "summary": "更新商品信息",
+    "description": "修改商品的名称、价格、库存、图片、类目、品牌、规格等信息，用于商家编辑商品。注意：该接口不允许通过此方式修改商品状态（状态字段会被忽略），改上下架请用 update_item_status。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "int",
+          "description": "商品id，业务上必填，用于定位要更新的商品。"
+        },
+        "name": {
+          "type": "string",
+          "description": "SKU名称，可选。"
+        },
+        "price": {
+          "type": "int",
+          "description": "价格，单位分，非负整数，可选。"
+        },
+        "stock": {
+          "type": "int",
+          "description": "库存数量，非负整数，可选。"
+        },
+        "image": {
+          "type": "string",
+          "description": "商品图片地址，可选。"
+        },
+        "category": {
+          "type": "string",
+          "description": "类目名称，可选。"
+        },
+        "brand": {
+          "type": "string",
+          "description": "品牌名称，可选。"
+        },
+        "spec": {
+          "type": "string",
+          "description": "规格，可选。"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "return_desc": "无业务数据返回，HTTP 200表示商品信息更新成功（status字段不会被修改）。",
+    "error_desc": "商品id不存在时更新无效，应核对id；请求体格式错误返回参数校验错误，应修正后重试。",
+    "warning": "【高风险】修改类写接口，改价/改库存影响交易，Agent不能直接执行，需人工确认。"
+  },
+  {
+    "name": "delete_item",
+    "summary": "删除商品",
+    "description": "根据商品id删除商品，用于商家移除不再销售的商品。普通买家任务不应调用。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "int",
+          "description": "商品id，必填。"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "return_desc": "无业务数据返回，HTTP 200表示删除成功。",
+    "error_desc": "商品id不存在时删除无效，应核对id；原始文档未提供级联影响说明，删除前应确认无进行中的订单依赖。",
+    "warning": "【高风险】删除类写接口，不可轻易恢复，Agent不能直接执行，必须人工确认。"
+  },
+  {
+    "name": "add_cart_item",
+    "summary": "加入购物车",
+    "description": "把商品加入当前用户的意向单（二手集市里称为\"意向单\"，等同于购物车）。若该商品已在意向单中，则自动累加数量；若种类数达到上限则拒绝。用于用户说\"加入意向单、加到意向单、加入购物车、我要这个\"。前提：用户已登录。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "int",
+          "description": "商品id，业务上必填。"
+        },
+        "name": {
+          "type": "string",
+          "description": "商品标题，可选，一般取自商品详情。"
+        },
+        "spec": {
+          "type": "string",
+          "description": "商品规格/动态属性键值，可选，如“8+128”。"
+        },
+        "price": {
+          "type": "int",
+          "description": "商品价格，单位分，可选。"
+        },
+        "image": {
+          "type": "string",
+          "description": "商品图片地址，可选。"
+        }
+      },
+      "required": [
+        "itemId"
+      ]
+    },
+    "return_desc": "无业务数据返回，HTTP 200表示已加入购物车（商品已存在时为数量累加）。",
+    "error_desc": "购物车商品种类超过上限时返回“用户购物车课程不能超过10”（源码提示上限为10），应告知用户购物车已满并建议先清理；请求体校验失败应补正商品信息。",
+    "warning": "【低风险】写操作但不产生交易后果；仍属于修改用户数据，建议向用户确认商品后再加入。"
+  },
+  {
+    "name": "update_cart",
+    "summary": "修改购物车条目",
+    "description": "更新意向单条目信息，典型用途是修改某条意向单商品的购买数量。也可用于把数量改成 0 以移除该商品。前提：用户已登录且条目存在。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "int",
+          "description": "购物车条目id，必填，用于定位要修改的条目。"
+        },
+        "num": {
+          "type": "int",
+          "description": "购买数量，可选，应为正整数且不超过商品库存；这是该接口最常修改的业务字段。"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "return_desc": "无业务数据返回，HTTP 200表示购物车条目更新成功。",
+    "error_desc": "条目id不存在或不属于当前用户时更新无效；数量超过库存可能导致后续下单失败，应提示用户核对数量。原始文档未提供专门错误码。",
+    "warning": "【低风险】修改用户购物车数据，不产生资金或交易后果，建议确认数量后执行。"
+  },
+  {
+    "name": "delete_cart_item",
+    "summary": "删除购物车单个商品",
+    "description": "根据意向单条目id删除一条意向单商品，用于用户说\"把这个从意向单/购物车去掉\"。前提：用户已登录。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "int",
+          "description": "购物车条目id，必填。"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "return_desc": "无业务数据返回，HTTP 200表示删除成功。",
+    "error_desc": "条目id不存在时删除无效，应刷新购物车列表核对；原始文档未提供专门错误码。",
+    "warning": "【低风险】删除用户个人购物车数据，影响可恢复（可重新加入），建议确认后执行。"
+  },
+  {
+    "name": "list_my_carts",
+    "summary": "查询购物车列表",
+    "description": "查询当前登录用户意向单（购物车）中的全部商品，并附带商品最新价格、最新状态和库存。用于用户问\"我的意向单里有什么、购物车里有什么、我加了哪些东西、我收藏了什么、意向单有几件\"。前提：用户已登录。",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    },
+    "return_desc": "返回 CartVO 数组：id条目id、itemId商品id、num数量、name标题、spec规格、price加入时价格（分）、newPrice商品最新价格、status商品最新状态（默认1）、stock最新库存（默认10）、image图片、createTime加入时间。购物车为空时返回空数组。",
+    "error_desc": "返回空数组应告知用户购物车为空；newPrice/status/stock为商品实时信息，若商品已下架或无库存应提醒用户。",
+    "warning": "【低风险】只读查询接口。"
+  },
+  {
+    "name": "delete_cart_items_batch",
+    "summary": "批量删除购物车商品",
+    "description": "根据一组条目id（按商品id匹配当前用户意向单）批量删除商品，下单成功后清理意向单也会走该逻辑，也用于用户批量移除商品。前提：用户已登录。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "ids": {
+          "type": "array",
+          "description": "购物车条目id集合（源码按商品id匹配删除），必填，至少一个，多个以逗号分隔。"
+        }
+      },
+      "required": [
+        "ids"
+      ]
+    },
+    "return_desc": "无业务数据返回，HTTP 200表示批量删除完成。",
+    "error_desc": "未传ids返回参数缺失错误，应补问要删除的条目；部分id不存在时仅删除匹配项，应提示用户刷新购物车核对结果。",
+    "warning": "【低风险】批量删除用户购物车数据，可重新加入恢复，建议确认删除清单后执行。"
+  },
+  {
+    "name": "list_pay_orders",
+    "summary": "查询支付单列表",
+    "description": "查询全部支付单（支付流水）信息，用于查看支付记录、支付状态、支付金额与渠道。多为管理/对账或支付结果确认场景。",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    },
+    "return_desc": "返回 PayOrderVO 数组：id支付单id、bizOrderNo业务订单号、payOrderNo支付单号、bizUserId支付用户id、payChannelCode支付渠道编码、amount支付金额（分）、payType支付方式（1网页JS 2小程序 3APP 4扫码 5余额支付）、status支付状态（0待提交 1待支付 2支付超时或取消 3支付成功）、resultCode第三方业务码、resultMsg第三方提示、paySuccessTime支付成功时间、payOverTime支付超时时间、qrCodeUrl支付二维码链接、createTime/updateTime创建与更新时间。",
+    "error_desc": "返回空数组表示暂无支付单，应如实告知；原始文档未提供该接口的专门错误码。",
+    "warning": "【低风险】只读查询接口，含支付流水信息，注意隐私。"
+  },
+  {
+    "name": "apply_pay_order",
+    "summary": "申请生成支付单",
+    "description": "为业务订单申请支付、生成支付单并返回支付单id。接口具备幂等性：同一业务订单重复申请时返回已有支付单；已支付成功或已关闭的订单会被拒绝；更换支付渠道会重置原支付单。当前系统仅支持余额支付（payType=5），选择其他支付方式会被拒绝。用于用户下单后发起付款。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "bizOrderNo": {
+          "type": "int",
+          "description": "业务订单id（订单号），必填。"
+        },
+        "amount": {
+          "type": "int",
+          "description": "支付金额，单位分，必填，必须为正数，应与订单应付金额一致。"
+        },
+        "payChannelCode": {
+          "type": "string",
+          "description": "支付渠道编码，必填，源码枚举值：wxPay微信支付、aliPay支付宝支付、balance余额支付。",
+          "enum": [
+            "wxPay",
+            "aliPay",
+            "balance"
+          ]
+        },
+        "payType": {
+          "type": "int",
+          "description": "支付方式，必填，枚举：1网页支付JS、2小程序支付、3APP支付、4扫码支付、5余额支付；当前仅5（余额支付）可用。",
+          "enum": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        "orderInfo": {
+          "type": "string",
+          "description": "订单中的商品信息描述，必填。"
+        }
+      },
+      "required": [
+        "bizOrderNo",
+        "amount",
+        "payChannelCode",
+        "payType",
+        "orderInfo"
+      ]
+    },
+    "return_desc": "返回支付单id字符串。拿到支付单id即申请成功，支付单进入待支付状态，随后可调用余额支付接口完成付款。",
+    "error_desc": "payType非5时返回“抱歉，目前只支持余额支付”，应引导用户使用余额支付；订单已支付返回“订单已经支付”，应告知用户勿重复支付；订单已关闭返回“订单已关闭”；必填参数缺失返回校验错误，应补问用户。",
+    "warning": "【高风险】涉及支付金额，Agent不能直接执行，必须向用户确认订单与金额并取得人工确认。"
+  },
+  {
+    "name": "pay_order_by_balance",
+    "summary": "余额支付支付单",
+    "description": "凭支付密码使用账户余额完成指定支付单的付款：校验支付单处于待支付状态，扣减用户余额，成功后将支付单置为支付成功并通知订单服务。当用户确认用余额付款并提供支付密码时调用。前提：已登录、已生成待支付支付单、余额充足、支付密码正确。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "int",
+          "description": "支付单id，必填，来自申请支付单返回的id，路径参数与请求体id应一致。"
+        },
+        "pw": {
+          "type": "string",
+          "description": "支付密码，必填。"
+        }
+      },
+      "required": [
+        "id",
+        "pw"
+      ]
+    },
+    "return_desc": "无业务数据返回，HTTP 200表示余额扣减成功、支付单状态已更新为支付成功（status=3）并记录支付成功时间，同时异步通知订单标记已支付。",
+    "error_desc": "支付单不存在或状态不是待支付时返回“交易已支付或关闭”，应告知用户勿重复支付；支付密码错误返回“用户密码错误”，应让用户重新输入；余额不足返回扣款失败/余额不足，应提示充值或更换支付方式。",
+    "warning": "【高风险】真实资金操作，Agent不能直接执行；且支付密码不得出现在对话中，必须引导用户跳转收银台由用户自行输入密码。"
+  },
+  {
+    "name": "confirm_receipt",
+    "description": "买家确认收货，交易完成。用于用户说“我收到了、确认收货、东西到了、确认交易完成”。执行后订单状态变为已完成，该商品会被标记为已售（下架）不能再购买。前提：用户已登录，且订单属于本人且状态为已支付。不可逆，请先向用户确认。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "int",
+          "description": "订单id，必填，为下单成功后系统返回的订单编号。"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    }
+  }
+]

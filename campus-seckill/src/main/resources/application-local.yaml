@@ -1,0 +1,11 @@
+# 本地开发环境配置
+# 与其他服务保持一致：MySQL / Redis / RabbitMQ 都在 192.168.1.4
+hm:
+  db:
+    host: 192.168.1.4      # 修改为你自己的虚拟机 IP 地址
+    pw: 123                 # docker 中 MySQL 的 root 密码
+  redis:
+    host: 192.168.1.4
+    port: 6379
+  rabbit:
+    host: 192.168.1.4

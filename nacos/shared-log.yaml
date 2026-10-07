@@ -1,0 +1,10 @@
+logging:
+  level:
+    com.campus: info
+    # SQL 日志按需开启：排查慢查询时临时改为 debug
+    com.campus.item.mapper: info
+    com.campus.user.mapper: info
+  pattern:
+    dateformat: HH:mm:ss:SSS
+  file:
+    path: "logs/${spring.application.name}"

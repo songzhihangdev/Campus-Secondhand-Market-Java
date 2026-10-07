@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 继承父工程：com.campus:campus:1.0.0（Spring Boot 2.7.12 / Java 11） -->
+    <parent>
+        <groupId>com.campus</groupId>
+        <artifactId>campus</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>campus-agent</artifactId>
+    <description>AI 商城导购 Agent：JWT 鉴权 + 会话记忆/落盘 + 商城 HTTP 执行器 + ReAct 调度（OpenAI 兼容 LLM）</description>
+
+    <dependencies>
+        <!-- Web：内置 RestTemplate、Jackson、Tomcat -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- JSON 解析（starter-web 已传递引入，此处显式声明以明确需求） -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+        </dependency>
+
+        <!-- JWT 鉴权：直接用 JDK 原生 KeyStore API 读取 jks（与商城侧同一套密钥），
+             不依赖 spring-security-rsa，避免其与 Boot 2.7 管理的 spring-security-crypto 版本冲突 -->
+
+        <!-- Nacos 服务发现：Agent 必须注册到 Nacos，否则网关按 lb://campus-agent
+             转发时会拿到 503 Service Unavailable（实测踩过：端口在监听但网关路由不到） -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+
+        <!-- Lombok：父工程已全局引入，这里无需重复声明版本 -->
+        <!-- 单元测试 spring-boot-starter-test：父工程已全局引入（test 作用域） -->
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- 支持以可执行 fat-jar 方式启动本模块 -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

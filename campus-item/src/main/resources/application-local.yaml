@@ -1,0 +1,6 @@
+hm:
+  db:
+    host: 192.168.1.4 # 修改为你自己的虚拟机IP地址
+    pw: 123 # 修改为docker中的MySQL密码
+  es:
+    host: 192.168.1.4 # Elasticsearch地址

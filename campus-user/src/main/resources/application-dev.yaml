@@ -1,0 +1,19 @@
+# dev profile 数据库配置（本机/虚拟机环境直连）
+#
+# 【为什么不用容器服务名】
+# 原本这里写的是 host: mysql —— 那是 Docker Compose 里的【服务名】，
+# 只有在同一 Docker 网络内才能解析。本机没有 Docker，解析会失败：
+#   UnknownHostException: mysql
+#     → Communications link failure
+#     → Failed to obtain JDBC Connection
+#     → /carts 等所有接口 500
+#
+# 当前 profile 为 dev（见 bootstrap.yaml 的 spring.profiles.active），
+# 所以本文件会覆盖 application.yaml 里的 hm.db —— 这里必须写真实地址。
+hm:
+  db:
+    host: 192.168.1.4
+    port: 3306
+    database: campus-user
+    un: root
+    pw: 123

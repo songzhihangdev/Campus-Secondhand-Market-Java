@@ -1,0 +1,100 @@
+server:
+  port: 8081
+hm:
+  db:
+    # 【本机/虚拟机环境直连，不依赖 Nacos】
+    # 原先 DB 配置在 Nacos 的 shared-jdbc.yaml，但那是给 Docker Compose 用的
+    # （host 写作容器服务名 mysql）。本机没有 Docker，解析该名字会报：
+    #   UnknownHostException: mysql → Communications link failure → 接口 500
+    # 现在写明真实地址，Nacos 被清空也能正常启动。
+    host: 192.168.1.4
+    port: 3306
+    database: hm-item
+    un: root
+    pw: 123
+  # ---------- 闲置物品图片存储 ----------
+  # 根目录（**绝对路径**，分隔符用正斜杠 /，Windows/Linux 通用）。
+  #
+  # 为什么必须是绝对路径：Spring 会把它转成 file:{root}/xxx 供浏览器访问，
+  # 相对路径会相对于「进程工作目录」解析 —— 从不同目录启动服务就找不到文件，
+  # 表现为「上传接口返回 200，但图片一直 404」。
+  #
+  # 换机器/换系统时**只需改这一处**：
+  #   Windows: D:/JavaProject/261005/itemImage
+  #   Linux  : /data/hmall/itemImage
+  #
+  # 目录不用手动创建，首次上传时会自动建「按天」的子目录。
+  image:
+    root-dir: D:/JavaProject/261005/itemImage
+    # 单张图片大小上限（字节）。5MB = 5242880
+    max-size: 5242880
+
+  swagger:
+    title: 校园二手物品相关接口
+    desc: 校园二手物品相关接口
+    package: com.campus.item.controller
+
+spring:
+  # 数据源与 hm.db 同源，避免依赖 Nacos 的 shared-jdbc.yaml（原因见 hm.db 注释）
+  datasource:
+    url: jdbc:mysql://${hm.db.host}:${hm.db.port}/${hm.db.database}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${hm.db.un}
+    password: ${hm.db.pw}
+
+  # 数据源与 hm.db 同源，避免依赖 Nacos 的 shared-jdbc.yaml（原因见 hm.db 注释）
+  application:
+    name: campus-item #微服务名称
+  profiles:
+    active: local
+  servlet:
+    multipart:
+      # 容器层上限要比 hm.image.max-size 略大，留出 multipart 边界的余量。
+      # 两者关系：hm.image.max-size <= max-file-size，否则大图会被容器先拒掉。
+      max-file-size: 6MB
+      max-request-size: 8MB
+  cloud:
+    nacos:
+        server-addr: 192.168.1.4:8848
+  rabbitmq:
+    host: 192.168.1.4
+    port: 5672
+    virtual-host: /hmall
+    username: hmall
+    password: 123
+mybatis-plus:
+  configuration:
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+  global-config:
+    db-config:
+      update-strategy: not_null
+      id-type: auto
+logging:
+  level:
+    # 【说明】原为 debug：每个未登录请求会打 55 行堆栈（171 次≈近万行噪音）
+
+    # 且 SQL 逐条打印淹没真实错误。现改 info，排查时临时调 debug。
+
+    com.campus: info
+
+    com.campus.item.mapper: debug
+
+  pattern:
+    dateformat: HH:mm:ss:SSS
+  file:
+    path: "logs/${spring.application.name}"
+knife4j:
+  # 固定文档端口，避免随机高位端口与其他进程冲突导致启动失败
+  port: 58902
+  enable: true
+  openapi:
+    title: 校园二手闲置接口文档
+    description: "校园二手闲置接口文档"
+    version: v1.0.0
+    group:
+      default:
+        group-name: default
+        api-rule: package
+        api-rule-resources:
+          - com.campus.item.controller
+# keytool -genkeypair -alias hmall -keyalg RSA -keypass hmall123 -keystore hmall.jks -storepass hmall123

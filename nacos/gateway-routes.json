@@ -1,0 +1,122 @@
+[
+  {
+    "id": "campus-user-users",
+    "uri": "lb://campus-user",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "pattern": "/users/**"
+        }
+      }
+    ]
+  },
+  {
+    "id": "campus-user-addresses",
+    "uri": "lb://campus-user",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "pattern": "/addresses/**"
+        }
+      }
+    ]
+  },
+  {
+    "id": "campus-item-image",
+    "uri": "lb://campus-item",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "pattern": "/itemImage/**"
+        }
+      }
+    ]
+  },
+  {
+    "id": "campus-item",
+    "uri": "lb://campus-item",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "pattern": "/items/**"
+        }
+      }
+    ]
+  },
+  {
+    "id": "campus-cart",
+    "uri": "lb://campus-cart",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "pattern": "/carts/**"
+        }
+      }
+    ]
+  },
+  {
+    "id": "campus-trade",
+    "uri": "lb://campus-trade",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "pattern": "/orders/**"
+        }
+      }
+    ]
+  },
+  {
+    "id": "campus-pay",
+    "uri": "lb://campus-pay",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "pattern": "/pay-orders/**"
+        }
+      }
+    ]
+  },
+  {
+    "id": "campus-agent",
+    "uri": "lb://campus-agent",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "pattern": "/agent/**"
+        }
+      }
+    ]
+  },
+  {
+    "id": "campus-seckill",
+    "uri": "lb://campus-seckill",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "pattern": "/seckill/**"
+        }
+      }
+    ]
+  },
+  {
+    "id": "campus-search",
+    "uri": "lb://campus-item",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "pattern": "/search/**"
+        }
+      }
+    ]
+  }
+]

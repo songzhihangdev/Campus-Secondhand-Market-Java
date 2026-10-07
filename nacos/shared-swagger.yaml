@@ -1,0 +1,13 @@
+knife4j:
+  enable: true
+  openapi:
+    title: ${hm.swagger.title:校园二手商城接口文档}
+    description: ${hm.swagger.desc:校园二手商城接口文档}
+    url: https://www.itcast.cn
+    version: v1.0.0
+    group:
+      default:
+        group-name: default
+        api-rule: package
+        api-rule-resources:
+          - ${hm.swagger.packege}

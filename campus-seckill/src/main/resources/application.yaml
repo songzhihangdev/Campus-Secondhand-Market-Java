@@ -1,0 +1,84 @@
+server:
+  port: 8092
+spring:
+  application:
+    name: campus-seckill
+  profiles:
+    active: local
+  datasource:
+    url: jdbc:mysql://${hm.db.host}:3306/hm-seckill?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: ${hm.db.pw}
+  redis:
+    host: ${hm.redis.host:192.168.1.4}
+    port: ${hm.redis.port:6379}
+    database: 2
+    timeout: 3000ms
+    lettuce:
+      pool:
+        # 秒杀瞬时高并发，连接池必须足够大，否则会出现
+        # "Unable to acquire connection from pool" 导致请求失败
+        max-active: 64
+        max-idle: 32
+        min-idle: 16
+        max-wait: 2000ms
+  # Redisson 配置（starter 会自动读取 spring.redis.* 生成 RedissonClient）
+  data:
+    redis:
+      redisson:
+        config: |
+          singleServerConfig:
+            connectionPoolSize: 64
+            connectionMinimumIdleSize: 16
+  rabbitmq:
+    host: ${hm.rabbit.host:192.168.1.4}
+    port: 5672
+    virtual-host: /hmall
+    username: hmall
+    password: 123
+    # 【重要】关闭 requeue：监听方法抛异常时消息不再重回队列。
+    # 默认 true 会导致：失败消息立即重投 → 无限死循环 → 日志刷屏
+    # → 消费者被 MQ 判定 unresponsive 而关闭，整条队列失去处理能力。
+    # 关闭后失败消息直接丢弃（本项目已在监听器内 try-catch 兜住异常并记日志）。
+    listener:
+      simple:
+        default-requeue-rejected: false
+        # 消费失败时重试次数（配合 requeue=false 也生效）
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1s
+    # 生产确认：确保消息真正到达 Broker
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+  cloud:
+    nacos:
+      server-addr: 192.168.1.4:8848
+
+mybatis-plus:
+  configuration:
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+  global-config:
+    db-config:
+      update-strategy: not_null
+      id-type: auto
+
+logging:
+  level:
+    # 【说明】原为 debug：每个未登录请求会打 55 行堆栈（171 次≈近万行噪音）
+
+    # 且 SQL 逐条打印淹没真实错误。现改 info，排查时临时调 debug。
+
+    com.campus: info
+
+    com.campus.seckill: debug
+
+knife4j:
+  # 固定文档端口，避免随机高位端口与其他进程冲突导致启动失败
+  port: 58906
+  enable: true
+  setting:
+    language: zh_cn

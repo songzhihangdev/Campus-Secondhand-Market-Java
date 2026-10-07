@@ -1,0 +1,75 @@
+server:
+  port: 8083
+hm:
+  db:
+    # 【本机/虚拟机环境直连，不依赖 Nacos】
+    # 原先 DB 配置在 Nacos 的 shared-jdbc.yaml，但那是给 Docker Compose 用的
+    # （host 写作容器服务名 mysql）。本机没有 Docker，解析该名字会报：
+    #   UnknownHostException: mysql → Communications link failure → 接口 500
+    # 现在写明真实地址，Nacos 被清空也能正常启动。
+    host: 192.168.1.4
+    port: 3306
+    database: hm-pay
+    un: root
+    pw: 123
+  swagger:
+    title: 校园二手支付相关接口
+    desc: 校园二手支付相关接口
+    package: com.campus.pay.controller
+
+spring:
+  # 数据源与 hm.db 同源，避免依赖 Nacos 的 shared-jdbc.yaml（原因见 hm.db 注释）
+  datasource:
+    url: jdbc:mysql://${hm.db.host}:${hm.db.port}/${hm.db.database}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${hm.db.un}
+    password: ${hm.db.pw}
+
+  # 数据源与 hm.db 同源，避免依赖 Nacos 的 shared-jdbc.yaml（原因见 hm.db 注释）
+  application:
+    name: campus-pay
+  profiles:
+    active: local
+  cloud:
+    nacos:
+      server-addr: 192.168.1.4:8848
+  rabbitmq:
+    host: 192.168.1.4
+    port: 5672
+    virtual-host: /hmall
+    username: hmall
+    password: 123
+mybatis-plus:
+  configuration:
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+  global-config:
+    db-config:
+      update-strategy: not_null
+      id-type: auto
+logging:
+  level:
+    # 【说明】原为 debug：每个未登录请求会打 55 行堆栈（171 次≈近万行噪音）
+
+    # 且 SQL 逐条打印淹没真实错误。现改 info，排查时临时调 debug。
+
+    com.campus: info
+
+  pattern:
+    dateformat: HH:mm:ss:SSS
+  file:
+    path: "logs/${spring.application.name}"
+knife4j:
+  # 固定文档端口，避免随机高位端口与其他进程冲突导致启动失败
+  port: 58905
+  enable: true
+  openapi:
+    title: 支付接口文档
+    description: "支付接口文档"
+    version: v1.0.0
+    group:
+      default:
+        group-name: default
+        api-rule: package
+        api-rule-resources:
+          - com.campus.pay.controller
+# keytool -genkeypair -alias hmall -keyalg RSA -keypass hmall123 -keystore hmall.jks -storepass hmall123

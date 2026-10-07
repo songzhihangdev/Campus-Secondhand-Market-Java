@@ -1,0 +1,66 @@
+server:
+  port: 8080
+
+hm:
+  jwt:
+    location: classpath:hmall.jks
+    alias: hmall
+    password: hmall123
+    tokenTTL: 30m
+  auth:
+    # 免鉴权白名单
+    #
+    # ⚠️ 安全要点：AntPathMatcher 的 `/items/*` 只匹配**单层**路径，
+    # 因此 `PUT /items`、`PUT /items/status/1/1`、`DELETE /items/1001`
+    # 都**不会**被它匹配到（前者层级不匹配，后者层级不匹配）。
+    # 但仍收窄为 GET 语义更清晰：读接口放行，写接口一律要求 JWT。
+    #
+    # campus-item 侧另有 OwnershipChecker 兜底校验发布者归属，
+    # 双层防护；但网关层就不该依赖下游兜底。
+    excludePaths:
+      # ---------- 图片相关，两条都要放行 ----------
+      # ① 上传接口：POST /items/image（multipart，字段名 file）
+      - /items/image/**
+      # ② 静态访问：GET /itemImage/{日期}/{文件名}
+      #    由 campus-item 的 ImageResourceConfig 映射到磁盘目录。
+      #    浏览器 <img> 标签发请求**不会带 Authorization 头**，
+      #    不放行则所有上传的图片都 401 加载失败。
+      - /itemImage/**
+      # ---------- 业务公开接口 ----------
+      - /search/**
+      - /users/login
+      - /hi
+      - /items/page        # 分页查询（只读）
+      - /items/*           # 物品详情，形如 /items/1001
+      - /doc.html
+      - /webjars/**
+      - /v2/api-docs
+      - /v3/api-docs
+      - /swagger-resources
+knife4j:
+  enable-aggregation: true
+  # 固定文档端口，避免随机高位端口与其他进程冲突导致启动失败
+  port: 58900
+  aggregate:
+    services:
+      - name: 用户服务
+        url: http://localhost:8085/v2/api-docs
+        route-path: /campus-user
+      - name: 交易服务
+        url: http://localhost:8084/v2/api-docs
+        route-path: /campus-trade
+      - name: 闲置服务
+        url: http://localhost:8081/v2/api-docs
+        route-path: /campus-item
+      - name: 意向单服务
+        url: http://localhost:8082/v2/api-docs
+        route-path: /campus-cart
+      - name: 支付服务
+        url: http://localhost:8083/v2/api-docs
+        route-path: /campus-pay
+      - name: 秒杀服务
+        url: http://localhost:8092/v2/api-docs
+        route-path: /campus-seckill
+      - name: AI 导购服务
+        url: http://localhost:8090/v2/api-docs
+        route-path: /campus-agent

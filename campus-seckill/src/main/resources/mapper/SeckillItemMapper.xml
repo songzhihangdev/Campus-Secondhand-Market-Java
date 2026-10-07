@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.seckill.mapper.SeckillItemMapper">
+
+    <!--
+      条件扣减库存：这是防超卖的最后一���道防线。
+      即使 Redis 扣减出现异常、或缓存被清空，
+      也能保证不会出现「库存为负」或「超卖」。
+      影响行数为 0 即表示库存已耗尽。
+    -->
+    <update id="deductStock">
+        UPDATE seckill_item
+        SET stock = stock - 1,
+            update_time = NOW()
+        WHERE id = #{seckillId}
+          AND stock > 0
+    </update>
+
+</mapper>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.seckill.mapper.SeckillOrderMapper">
+
+    <!--
+      DB 层幂等检查。
+      与 seckill_order 表上的唯一索引 uk_user_seckill 配合：
+      前者用于快速判断（可走索引），后者用于并发兜底（数据库硬约束）。
+    -->
+    <select id="existsByUserAndSeckill" resultType="int">
+        SELECT COUNT(1)
+        FROM seckill_order
+        WHERE user_id = #{userId}
+          AND seckill_id = #{seckillId}
+    </select>
+
+</mapper>
